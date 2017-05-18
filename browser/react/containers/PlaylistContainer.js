@@ -1,18 +1,25 @@
 import React, {Component} from "react";
+// import { Redirect } from "react-router";
 import NewPlaylist from "../components/NewPlaylist";
+import Songs from "../components/Songs";
+import axios from 'axios';
 
 export default class extends Component {
 	constructor(props) {
 		super(props);
-		this.state = { playlistTitle: "" };
-		this.updateArtistList = this.updateArtistList.bind(this);
+		this.state = { playlistTitle: "", redirect: false, playlistId: null};
+		this.handleOnSubmit = this.handleOnSubmit.bind(this);
 		this.handleUserInput = this.handleUserInput.bind(this);
 	}
 
 	handleOnSubmit(event) {
 		// create playlist
 		event.preventDefault();
-		console.log(this.state.playlistTitle);
+		axios.post('/api/playlists', { name: this.state.playlistTitle })
+		.then(res => res.data)
+		.then(playlist => {
+			this.props.updatePlaylistsAndRedirect(playlist);
+		});
 	}
 
 	handleUserInput(event) {
@@ -22,12 +29,13 @@ export default class extends Component {
 	}
 
 	render() {
+
+
 		return (
 			<div>
 				<NewPlaylist handleOnSubmit={this.handleOnSubmit} handleUserInput={this.handleUserInput}
 					playlistTitle={this.state.playlistTitle} />
-				}
-				<Artists artists={filteredArtists} />
+				<Songs artists={this.props.songs} />
 			</div>
 			)
 	}

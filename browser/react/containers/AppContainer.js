@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import { hashHistory } from 'react-router';
 
 import initialState from '../initialState';
 import AUDIO from '../audio';
@@ -23,14 +24,15 @@ export default class AppContainer extends Component {
     this.prev = this.prev.bind(this);
     this.selectAlbum = this.selectAlbum.bind(this);
     this.selectArtist = this.selectArtist.bind(this);
+    this.updatePlaylistsAndRedirect = this.updatePlaylistsAndRedirect.bind(this);
   }
 
   componentDidMount () {
-
     Promise
       .all([
         axios.get('/api/albums/'),
-        axios.get('/api/artists/')
+        axios.get('/api/artists/'),
+        axios.get('/api/playlists/')
       ])
       .then(res => res.map(r => r.data))
       .then(data => this.onLoad(...data));
@@ -41,11 +43,19 @@ export default class AppContainer extends Component {
       this.setProgress(AUDIO.currentTime / AUDIO.duration));
   }
 
-  onLoad (albums, artists) {
+  onLoad (albums, artists, playlists) {
     this.setState({
       albums: convertAlbums(albums),
-      artists: artists
+      artists: artists,
+      playlists: playlists
     });
+  }
+
+  updatePlaylistsAndRedirect(playlist){
+    let playlists = this.state.playlists;
+    playlists.push(playlist);
+    this.setState({playlists});
+    hashHistory.push(`/playlist/${playlist.id}`);
   }
 
   play () {
@@ -125,18 +135,19 @@ export default class AppContainer extends Component {
   }
 
   render () {
-
+console.log("rendering app");
     const props = Object.assign({}, this.state, {
       toggleOne: this.toggleOne,
       toggle: this.toggle,
       selectAlbum: this.selectAlbum,
-      selectArtist: this.selectArtist
+      selectArtist: this.selectArtist,
+      updatePlaylistsAndRedirect: this.updatePlaylistsAndRedirect
     });
 
     return (
       <div id="main" className="container-fluid">
         <div className="col-xs-2">
-          <Sidebar />
+          <Sidebar playlists={this.state.playlists} />
         </div>
         <div className="col-xs-10">
         {
