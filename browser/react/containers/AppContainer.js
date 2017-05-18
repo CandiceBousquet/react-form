@@ -25,6 +25,7 @@ export default class AppContainer extends Component {
     this.selectAlbum = this.selectAlbum.bind(this);
     this.selectArtist = this.selectArtist.bind(this);
     this.updatePlaylistsAndRedirect = this.updatePlaylistsAndRedirect.bind(this);
+    this.selectPlaylist = this.selectPlaylist.bind(this);
   }
 
   componentDidMount () {
@@ -32,7 +33,8 @@ export default class AppContainer extends Component {
       .all([
         axios.get('/api/albums/'),
         axios.get('/api/artists/'),
-        axios.get('/api/playlists/')
+        axios.get('/api/playlists/'),
+        axios.get('/api/songs/')
       ])
       .then(res => res.map(r => r.data))
       .then(data => this.onLoad(...data));
@@ -43,11 +45,23 @@ export default class AppContainer extends Component {
       this.setProgress(AUDIO.currentTime / AUDIO.duration));
   }
 
-  onLoad (albums, artists, playlists) {
+  selectPlaylist (playlistId) {
+    axios.get(`/api/playlists/${playlistId}`)
+    .then(res => res.data)
+    .then(res => {
+      res.songs = res.songs.map(convertSong)
+        this.setState({
+          selectedPlaylist: res
+        });
+      })
+  }
+
+  onLoad (albums, artists, playlists, songs) {
     this.setState({
       albums: convertAlbums(albums),
       artists: artists,
-      playlists: playlists
+      playlists: playlists,
+      songs: songs
     });
   }
 
@@ -141,7 +155,8 @@ console.log("rendering app");
       toggle: this.toggle,
       selectAlbum: this.selectAlbum,
       selectArtist: this.selectArtist,
-      updatePlaylistsAndRedirect: this.updatePlaylistsAndRedirect
+      updatePlaylistsAndRedirect: this.updatePlaylistsAndRedirect,
+      selectPlaylist: this.selectPlaylist
     });
 
     return (
